@@ -5,7 +5,7 @@ from shutil import copyfile
 from tqdm import tqdm
 
 main_src = "../archive_nogit/HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5/train+val_corrupted"
-main_des = "../archive/train+val/HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5_augmented/train+val_corrupted_augmented"
+main_des = "../archive/train+val/HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5_augmented/train+val"
 exclude = ["nv"]
 
 

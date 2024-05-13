@@ -29,8 +29,8 @@ TRAIN_SPLIT = 0.9
 VAL_SPLIT = 1 - TRAIN_SPLIT
 
 # Define the train and test directories
-train_name = "HAM10000_ordered_224_0.8_0.2_augmented"
-train_dir = f"../archive/train+val/{train_name}/train+val_augmented"
+train_name = "HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5_augmented"
+train_dir = f"../archive/train+val/{train_name}/train+val"
 test_dir = "../archive/HAM10000_ordered_224_0.8_0.2/test"
 
 # construct the argument parser and parse the arguments

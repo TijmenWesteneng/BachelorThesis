@@ -39,8 +39,8 @@ def train_model(dataset_name):
     plot_save = f"outputs/{model_name}_plot.png"
 
     # Fail guard to prevent program from crashing after training
-    if not os.path.exists(model_save) or not os.path.exists(plot_save):
-        raise Exception(f"{model_save} or {plot_save} doesn't exist")
+    if not os.path.exists("outputs"):
+        raise Exception(f"Output folder doesn't exist")
 
     # set the device we will be using to train the model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -72,7 +72,7 @@ def train_model(dataset_name):
     valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 
     # initialize the resnet model
-    model = resnet18(weights=ResNet18_Weights.DEFAULT).to(device)
+    model = resnet18(weights=ResNet18_Weights.DEFAULT)
 
     # freeze all model parameters
     for param in model.parameters():
@@ -80,6 +80,9 @@ def train_model(dataset_name):
     num_ftrs = model.fc.in_features
     classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(num_ftrs, 7))]))
     model.fc = classifier
+
+    # Send the model to the gpu
+    model.to(device)
 
     # initialize our optimizer and loss function
     opt = Adam(model.parameters(), lr=INIT_LR)

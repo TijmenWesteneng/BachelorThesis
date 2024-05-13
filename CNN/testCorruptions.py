@@ -1,0 +1,111 @@
+import os
+
+import numpy as np
+import torch
+from sklearn.metrics import classification_report, balanced_accuracy_score
+from torch.utils.data import DataLoader
+from torchvision import transforms, datasets
+from tqdm import tqdm
+import pandas as pd
+
+model_name = "HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train"
+model_path = f"outputs/{model_name}_model.pt"
+main_test_dir = "../archive/test/HAM10000_ordered_224_0.8_0.2_corrupted/test"
+clean_test_dir = "../archive/HAM10000_ordered_224_0.8_0.2/test"
+csv_path = f"tests/{model_name}_test.csv"
+BATCH_SIZE = 64
+
+data_transform = transforms.Compose([transforms.ToTensor(),
+                                     transforms.Normalize(
+                                         mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225]
+                                     )])
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = torch.load(model_path)
+
+
+def test_corruption(test_path):
+    # Create the dataloader that will provide the model with data
+    test_data = datasets.ImageFolder(root=test_path, transform=data_transform, target_transform=None)
+    test_dataloader = DataLoader(test_data, batch_size=BATCH_SIZE)
+
+    # Initialize amount of correct tests to 0
+    #test_correct = 0
+
+    with torch.no_grad():
+        # Set the model in evaluation mode
+        model.eval()
+
+        # Initialize a list to store the predictions
+        preds = []
+
+        # Loop over the test set
+        for (x, y) in tqdm(test_dataloader):
+
+            # Send the input to the device
+            (x, y) = (x.to(device), y.to(device))
+
+            # Make the predictions and add them to the list
+            pred = model(x)
+            preds.extend(pred.argmax(axis=1).cpu().numpy())
+
+            # Calculate the number of correct predictions
+            #test_correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+
+        # Calculate the percentage of correct predictions (accuracy)
+        #test_accuracy = test_correct / len(test_dataloader.dataset)
+        #print(f"Test accuracy: {test_accuracy}")
+
+        # Calculate the average balanced accuracy
+        bal_acc = balanced_accuracy_score(np.array(test_data.targets), np.array(preds))
+        print(f"Balanced accuracy: {bal_acc}")
+
+        # Print a classification report to compare with the calculated accuracy value
+        #print(classification_report(np.array(test_data.targets), np.array(preds), target_names=test_data.classes))
+
+        return bal_acc
+
+
+def test_corruptions(corruptions_folder_path):
+    # Create dataframe to save all error rates in
+    err_df = pd.DataFrame()
+
+    # Loop over all the severity folders
+    severities = os.listdir(corruptions_folder_path)
+    for severity in severities:
+        sev_path = os.path.join(corruptions_folder_path, severity)
+        # Loop over all the corruption folders and save the balanced error rates
+        bal_err_list = []
+
+        for corruption in os.listdir(sev_path):
+            # Create corruption column in df if it doesn't exist yet
+            if corruption not in err_df.columns:
+                err_df[corruption] = []
+            # Run the test on the specified corruption
+            sev_cor_path = os.path.join(sev_path, corruption)
+            print(f"Testing {severity}:{corruption}")
+            bal_acc = test_corruption(sev_cor_path)
+            # Calculate balanced error by subtracting balanced accuracy from 1 and rounding to 3 digits
+            bal_err = 1 - bal_acc
+            bal_err_list.append(round(bal_err, 3))
+
+        # Add the list of balanced errors as a row to the dataframe
+        err_df.loc[len(err_df)] = bal_err_list
+
+    # Calculate the clean balanced error rate and add as a column to the dataframe
+    clean_bal_acc = test_corruption(clean_test_dir)
+    clean_ball_err = round(1 - clean_bal_acc, 3)
+    err_df.insert(0, "clean", clean_ball_err)
+
+    print(err_df)
+
+    # Create a dictionary with the severities as index to rename the rows of the dataframe
+    index_dict = {index: value for index, value in enumerate(severities)}
+    err_df = err_df.rename(index=index_dict)
+
+    # Save the dataframe as a csv in the tests folder
+    err_df.to_csv(csv_path)
+
+
+test_corruptions(main_test_dir)

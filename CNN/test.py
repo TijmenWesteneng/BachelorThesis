@@ -3,9 +3,10 @@ import torch
 from sklearn.metrics import classification_report
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
+from tqdm import tqdm
 
-model_path = "models/firstModel.pt"
-test_dir = "../archive/HAM10000_augmented_all224_0.9_0.1/test"
+model_path = "outputs/softMax_10epochs_0.8_Model.pt"
+test_dir = "../archive_trash/HAM10000_augmented_all224_0.8_0.2/test"
 BATCH_SIZE = 64
 
 data_transform = transforms.Compose([transforms.ToTensor(),
@@ -27,7 +28,7 @@ with torch.no_grad():
     preds = []
 
     # loop over the test set
-    for (x, y) in testDataLoader:
+    for (x, y) in tqdm(testDataLoader):
         # send the input to the device
         x = x.to(device)
         # make the predictions and add them to the list

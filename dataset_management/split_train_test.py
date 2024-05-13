@@ -3,12 +3,12 @@ import random
 from shutil import copyfile
 from tqdm import tqdm
 
-main_dir = "../archive"
+main_dir = "../archive_nogit"
 os.chdir(main_dir)
-directory = "HAM10000_augmented_all224"
-train_ratio = 0.90
+directory = "HAM10000_ordered_224"
+train_ratio = 0.80
 test_ratio = round(1 - train_ratio, 2)
-new_directory = f"HAM10000_augmented_all224_{train_ratio}_{test_ratio}"
+new_directory = f"HAM10000_ordered_224_{train_ratio}_{test_ratio}"
 
 if new_directory not in os.listdir():
     os.mkdir(new_directory)

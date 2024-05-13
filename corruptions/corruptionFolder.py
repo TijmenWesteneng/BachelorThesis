@@ -7,8 +7,8 @@ import skimage as sk
 import random
 from tqdm.auto import tqdm
 
-src_dir = "../archive/HAM10000_augmented_all224"
-des_dir = "../HAM10000_augmented_all224_corrupted"
+src_dir = "../archive_trash/HAM10000_augmented_all224_0.8_0.2/test"
+des_dir = "../archive_trash/HAM10000_augmented_all224_0.8_0.2_corrupted/test"
 
 
 def corrupt_folder(src, des):

@@ -20,11 +20,6 @@ import math
 from tqdm import tqdm
 from collections import OrderedDict
 
-
-# construct the argument parser and parse the arguments
-model_save = "models/firstModel.pt"
-plot_save = "plot.png"
-
 # define training hyperparameters
 INIT_LR = 1e-3
 BATCH_SIZE = 64
@@ -32,6 +27,17 @@ EPOCHS = 10
 # define the train and val splits
 TRAIN_SPLIT = 0.9
 VAL_SPLIT = 1 - TRAIN_SPLIT
+
+# Define the train and test directories
+train_name = "HAM10000_ordered_224_0.8_0.2_augmented"
+train_dir = f"../archive/train+val/{train_name}/train+val_augmented"
+test_dir = "../archive/HAM10000_ordered_224_0.8_0.2/test"
+
+# construct the argument parser and parse the arguments
+model_name = f"RN50_{train_name}_{EPOCHS}epochs_{BATCH_SIZE}batch_{INIT_LR}lr_{TRAIN_SPLIT}train"
+model_save = f"outputs/{model_name}_model.pt"
+plot_save = f"outputs/{model_name}_plot.png"
+
 # set the device we will be using to train the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -41,10 +47,6 @@ data_transform = transforms.Compose([transforms.ToTensor(),
                                          std=[0.229, 0.224, 0.225]
                                      )
                                      ])
-
-train_dir = "../archive/HAM10000_augmented_all224_0.9_0.1/train+val"
-# train_dir = "../archive/HAM10000_ordered"
-test_dir = "../archive/HAM10000_augmented_all224_0.9_0.1/test"
 
 # Load the skin dataset
 print("[INFO] loading the skin dataset...")
@@ -68,7 +70,9 @@ trainSteps = len(trainDataLoader.dataset) // BATCH_SIZE
 valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 
 # initialize the resnet model
-model = resnet50(weights=ResNet50_Weights.DEFAULT).to(device)
+model = resnet18(weights=ResNet18_Weights.DEFAULT).to(device)
+
+torchinfo.summary(model, (1, 3, 224, 224), col_names=("input_size", "output_size", "num_params", "kernel_size"))
 
 # freeze all model parameters
 for param in model.parameters():
@@ -84,6 +88,7 @@ torchinfo.summary(model, (1, 3, 224, 224), col_names=("input_size", "output_size
 opt = Adam(model.parameters(), lr=INIT_LR)
 weights = torch.Tensor([0.382, 0.243, 0.117, 1.21, 0.125, 0.166, 1]).to(device)
 lossFn = nn.NLLLoss(weights)
+softMax = nn.LogSoftmax(dim=1)
 # initialize a dictionary to store training history
 H = {
     "train_loss": [],
@@ -112,7 +117,7 @@ for e in range(0, EPOCHS):
         (x, y) = (x.to(device), y.to(device))
         # perform a forward pass and calculate the training loss
         pred = model(x)
-        loss = lossFn(pred, y)
+        loss = lossFn(softMax(pred), y)
         # zero out the gradients, perform the backpropagation step,
         # and update the weights
         opt.zero_grad()
@@ -133,7 +138,7 @@ for e in range(0, EPOCHS):
             (x, y) = (x.to(device), y.to(device))
             # make the predictions and calculate the validation loss
             pred = model(x)
-            totalValLoss += lossFn(pred, y)
+            totalValLoss += lossFn(softMax(pred), y)
             # calculate the number of correct predictions
             valCorrect += (pred.argmax(1) == y).type(
                 torch.float).sum().item()
@@ -177,7 +182,7 @@ with torch.no_grad():
         pred = model(x)
         preds.extend(pred.argmax(axis=1).cpu().numpy())
 # generate a classification report
-# print(classification_report(testData.targets.cpu().numpy(), np.array(preds), target_names=testData.classes))
+#print(classification_report(np.array(testData.targets), np.array(preds), target_names=testData.classes))
 
 # plot the training loss and accuracy
 plt.style.use("ggplot")

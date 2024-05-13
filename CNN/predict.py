@@ -26,7 +26,7 @@ data_transform = transforms.Compose([transforms.ToTensor(),
                                          mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225]
                                      )])
-test_dir = "../archive/HAM10000_augmented_all224_0.9_0.1/test"
+test_dir = "../archive_trash/HAM10000_augmented_all224_0.9_0.1/test"
 
 # set the device we will be using to test the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,7 +39,7 @@ testData = Subset(testData, idxs)
 # initialize the test data loader
 testDataLoader = DataLoader(testData, batch_size=1)
 # load the model and set it to evaluation mode
-model = torch.load("models/firstModel.pt").to(device)
+model = torch.load("outputs/softMax_10epochs_Model.pt").to(device)
 model.eval()
 
 # switch off autograd

@@ -59,4 +59,5 @@ def add_corruptions_to_dataset(src_dat: str, src_cor_dat: str, des_dat: str, cor
                     continue
 
 
-add_corruptions_to_dataset(src_dat_path, src_cor_path, des_dat_path, corruption_ratio, severity)
+if __name__ == "__main__":
+    add_corruptions_to_dataset(src_dat_path, src_cor_path, des_dat_path, corruption_ratio, severity)

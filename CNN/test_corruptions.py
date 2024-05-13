@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 import torch
 from sklearn.metrics import classification_report, balanced_accuracy_score
@@ -7,31 +6,13 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 from tqdm import tqdm
 import pandas as pd
-
-model_name = "HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train"
-model_path = f"outputs/{model_name}_model.pt"
-main_test_dir = "../archive/test/HAM10000_ordered_224_0.8_0.2_corrupted/test"
-clean_test_dir = "../archive/HAM10000_ordered_224_0.8_0.2/test"
-csv_path = f"tests/{model_name}_test.csv"
-BATCH_SIZE = 64
-
-data_transform = transforms.Compose([transforms.ToTensor(),
-                                     transforms.Normalize(
-                                         mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225]
-                                     )])
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torch.load(model_path)
+import string
 
 
-def test_corruption(test_path):
+def test_corruption(test_path, model, data_transform, batch_size, device):
     # Create the dataloader that will provide the model with data
     test_data = datasets.ImageFolder(root=test_path, transform=data_transform, target_transform=None)
-    test_dataloader = DataLoader(test_data, batch_size=BATCH_SIZE)
-
-    # Initialize amount of correct tests to 0
-    #test_correct = 0
+    test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
     with torch.no_grad():
         # Set the model in evaluation mode
@@ -50,13 +31,6 @@ def test_corruption(test_path):
             pred = model(x)
             preds.extend(pred.argmax(axis=1).cpu().numpy())
 
-            # Calculate the number of correct predictions
-            #test_correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-
-        # Calculate the percentage of correct predictions (accuracy)
-        #test_accuracy = test_correct / len(test_dataloader.dataset)
-        #print(f"Test accuracy: {test_accuracy}")
-
         # Calculate the average balanced accuracy
         bal_acc = balanced_accuracy_score(np.array(test_data.targets), np.array(preds))
         print(f"Balanced accuracy: {bal_acc}")
@@ -67,7 +41,20 @@ def test_corruption(test_path):
         return bal_acc
 
 
-def test_corruptions(corruptions_folder_path):
+def test_corruptions(model_path, corruptions_folder_path, clean_folder_path, output_csv_dir):
+    model_name = model_path.replace("_model.pt", "")
+    csv_path = f"{output_csv_dir}/{model_name}_test.csv"
+    batch_size = 64
+
+    data_transform = transforms.Compose([transforms.ToTensor(),
+                                         transforms.Normalize(
+                                             mean=[0.485, 0.456, 0.406],
+                                             std=[0.229, 0.224, 0.225]
+                                         )])
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = torch.load(model_path)
+
     # Create dataframe to save all error rates in
     err_df = pd.DataFrame()
 
@@ -85,7 +72,7 @@ def test_corruptions(corruptions_folder_path):
             # Run the test on the specified corruption
             sev_cor_path = os.path.join(sev_path, corruption)
             print(f"Testing {severity}:{corruption}")
-            bal_acc = test_corruption(sev_cor_path)
+            bal_acc = test_corruption(sev_cor_path, model, data_transform, batch_size, device)
             # Calculate balanced error by subtracting balanced accuracy from 1 and rounding to 3 digits
             bal_err = 1 - bal_acc
             bal_err_list.append(round(bal_err, 3))
@@ -94,7 +81,7 @@ def test_corruptions(corruptions_folder_path):
         err_df.loc[len(err_df)] = bal_err_list
 
     # Calculate the clean balanced error rate and add as a column to the dataframe
-    clean_bal_acc = test_corruption(clean_test_dir)
+    clean_bal_acc = test_corruption(clean_folder_path, model, data_transform, batch_size, device)
     clean_ball_err = round(1 - clean_bal_acc, 3)
     err_df.insert(0, "clean", clean_ball_err)
 
@@ -108,4 +95,8 @@ def test_corruptions(corruptions_folder_path):
     err_df.to_csv(csv_path)
 
 
-test_corruptions(main_test_dir)
+if __name__ == "__main__":
+    test_corruptions("outputs/HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train_model.pt",
+                     "../archive/test/HAM10000_ordered_224_0.8_0.2_corrupted/test",
+                     "../archive/HAM10000_ordered_224_0.8_0.2/test",
+                     "tests")

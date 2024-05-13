@@ -4,7 +4,7 @@ from pathlib import Path
 from shutil import copyfile
 from tqdm import tqdm
 
-main_src = "../archive/HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5/train+val_corrupted"
+main_src = "../archive_nogit/HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5/train+val_corrupted"
 main_des = "../archive/train+val/HAM10000_ordered_224_0.8_0.2_corrupted_s1_cr0.5_augmented/train+val_corrupted_augmented"
 exclude = ["nv"]
 
@@ -36,6 +36,8 @@ def augment_folder(src, des):
 
 
 def augment_folders(src, des, exclude):
+    if not os.path.exists(des):
+        os.makedirs(des)
     for folder in tqdm(os.listdir(src)):
         src_fol_dir = os.path.join(src, folder)
         des_fol_dir = os.path.join(des, folder)
@@ -43,10 +45,11 @@ def augment_folders(src, des, exclude):
             os.mkdir(des_fol_dir)
 
         if folder in exclude:
-            for file in os.listdir(src_fol_dir):
+            for file in tqdm(os.listdir(src_fol_dir)):
                 copyfile(os.path.join(src_fol_dir, file), os.path.join(des_fol_dir, file))
         else:
             augment_folder(src_fol_dir, des_fol_dir)
 
 
-augment_folders(main_src, main_des, exclude)
+if __name__ == "__main__":
+    augment_folders(main_src, main_des, exclude)

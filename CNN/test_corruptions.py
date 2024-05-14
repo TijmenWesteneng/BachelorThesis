@@ -43,6 +43,8 @@ def test_corruption(test_path, model, data_transform, batch_size, device):
 
 def test_corruptions(model_path, corruptions_folder_path, clean_folder_path, output_csv_dir):
     model_name = model_path.replace("_model.pt", "")
+    # TODO: Make this not a hot fix
+    model_name = model_name.lstrip("outputs\\")
     csv_path = f"{output_csv_dir}/{model_name}_test.csv"
     batch_size = 64
 

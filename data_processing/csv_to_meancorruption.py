@@ -3,7 +3,7 @@ from statistics import mean
 
 test_csv_path = "../CNN/tests/HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train_Test.csv"
 base_csv_path = "../CNN/tests/RN50_HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train_Test.csv"
-des_csv_path = "../CNN/tests/BCE_HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train_test.csv"
+des_csv_path = "../CNN/tests/BCE/BCE_HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train_test.csv"
 
 def calc_cor_err(csv_test_path, csv_base_path):
     # Initialize the dataframes needed to do the calculations
@@ -37,5 +37,6 @@ def calc_cor_err(csv_test_path, csv_base_path):
     return err_df
 
 
-err_df = calc_cor_err(test_csv_path, base_csv_path)
-err_df.to_csv(des_csv_path)
+if __name__ == "__main__":
+    err_df = calc_cor_err(test_csv_path, base_csv_path)
+    err_df.to_csv(des_csv_path)

@@ -42,9 +42,16 @@ def test_corruption(test_path, model, data_transform, batch_size, device):
 
 
 def test_corruptions(model_path, corruptions_folder_path, clean_folder_path, output_csv_dir):
+    if not os.path.exists(output_csv_dir):
+        raise Exception(f"Output csv folder doesn't exist")
+
     model_name = model_path.replace("_model.pt", "")
-    # TODO: Make this not a hot fix
-    model_name = model_name.lstrip("outputs\\")
+    # Remove all the directories from the model_path so all that's left is the model name
+    while model_name.find("\\") != -1 or model_name.find("/") != -1:
+        if model_name.find("\\") != -1:
+            model_name = model_name[model_name.find("\\") + 1:]
+        if model_name.find("/") != -1:
+            model_name = model_name[model_name.find("/") + 1:]
     csv_path = f"{output_csv_dir}/{model_name}_test.csv"
     batch_size = 64
 

@@ -17,6 +17,8 @@ import time
 import math
 from tqdm import tqdm
 from collections import OrderedDict
+from sklearn.metrics import balanced_accuracy_score
+import numpy as np
 
 train_datasets_dir = "../archive/train+val"
 
@@ -28,7 +30,7 @@ def train_model(dataset_name):
     EPOCHS = 20
     early_stopping_th = 3
     # define the train and val splits
-    TRAIN_SPLIT = 0.9
+    TRAIN_SPLIT = 0.8
     VAL_SPLIT = 1 - TRAIN_SPLIT
 
     # Define the train and test directories
@@ -100,10 +102,10 @@ def train_model(dataset_name):
         "val_acc": []
     }
     # Keep track of the best loss for early stopping
-    lowest_val_loss = float("inf")
+    highest_balanced_accuracy = 0
     epochs_without_improvement = 0
     # measure how long training is going to take
-    print("[INFO] training the network...")
+    print("[INFO] Training the network...")
     startTime = time.time()
 
     # loop over our epochs
@@ -134,6 +136,10 @@ def train_model(dataset_name):
             totalTrainLoss += loss
             trainCorrect += (pred.argmax(1) == y).type(torch.float).sum().item()
 
+        # Save all predictions to compare with ground truth and calculate balanced accuracy
+        valPreds = []
+        valTruths = []
+
         # switch off autograd for evaluation
         with torch.no_grad():
             # set the model in evaluation mode
@@ -148,6 +154,10 @@ def train_model(dataset_name):
                 # calculate the number of correct predictions
                 valCorrect += (pred.argmax(1) == y).type(
                     torch.float).sum().item()
+
+                # Add the predictions to the list of validation predictions and the actual labels to valTruths
+                valPreds.extend(pred.argmax(axis=1).cpu().numpy())
+                valTruths.extend(y.cpu().numpy())
 
         # calculate the average training and validation loss
         avgTrainLoss = totalTrainLoss / trainSteps
@@ -167,15 +177,19 @@ def train_model(dataset_name):
         print("Val loss: {:.6f}, Val accuracy: {:.4f}\n".format(
             avgValLoss, valCorrect))
 
-        # Early stopping: Check if validation loss has improved, if so save the model, if not improved for th: break
-        if avgValLoss > lowest_val_loss:
+        bal_acc = balanced_accuracy_score(np.array(valTruths), np.array(valPreds))
+
+        # Early stopping: Check if balanced accuracy has improved, if so save the model, if not improved for th: break
+        if bal_acc < highest_balanced_accuracy:
             epochs_without_improvement = epochs_without_improvement + 1
             if epochs_without_improvement >= early_stopping_th:
-                print(f"Early stopping at {e} epochs")
+                print(f"Early stopping at {e + 1} epochs")
                 break
         else:
+            highest_balanced_accuracy = bal_acc
             epochs_without_improvement = 0
             best_model = model
+            print(f"New highest validation balanced accuracy: {highest_balanced_accuracy}")
 
     # finish measuring how long training took
     endTime = time.time()
@@ -201,4 +215,6 @@ def train_model(dataset_name):
 
 # Loop over all the dataset directories in the folder and train a model with each of them
 for dir in os.listdir(train_datasets_dir):
-    train_model(dir)
+    # Check if the directory is actually a dataset directory (useful to exclude datasets by putting them in a folder)
+    if dir.find("HAM10000") != -1:
+        train_model(dir)

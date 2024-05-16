@@ -55,6 +55,11 @@ def test_corruptions(model_path, corruptions_folder_path, clean_folder_path, out
     csv_path = f"{output_csv_dir}/{model_name}_test.csv"
     batch_size = 64
 
+    if os.path.exists(csv_path):
+        print(f"CSV already exists: {csv_path}")
+        print("Skipping testing")
+        return
+
     data_transform = transforms.Compose([transforms.ToTensor(),
                                          transforms.Normalize(
                                              mean=[0.485, 0.456, 0.406],

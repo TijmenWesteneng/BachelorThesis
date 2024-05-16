@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet50, ResNet50_Weights
 from torch.optim import Adam
 from torch import nn
 import matplotlib.pyplot as plt
@@ -39,7 +39,7 @@ def train_model(dataset_name):
 
     # Define saving paths
     output_path = "outputs"
-    model_name = f"{dataset_name}_{EPOCHS}epochs_{early_stopping_th}early_{BATCH_SIZE}batch_{INIT_LR}lr_{TRAIN_SPLIT}train"
+    model_name = f"RN50_{dataset_name}_{EPOCHS}epochs_{early_stopping_th}early_{BATCH_SIZE}batch_{INIT_LR}lr_{TRAIN_SPLIT}train"
     model_save = f"{output_path}/{model_name}_model.pt"
     plot_save = f"{output_path}/{model_name}_plot.png"
 
@@ -78,7 +78,7 @@ def train_model(dataset_name):
     valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 
     # initialize the resnet model
-    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    model = resnet50(weights=ResNet50_Weights.DEFAULT)
 
     # freeze all model parameters
     for param in model.parameters():

@@ -1,14 +1,14 @@
-# set the matplotlib backend so figures can be saved in the background
+# Set the matplotlib backend so figures can be saved in the background
 import os.path
 
 import matplotlib
 matplotlib.use("Agg")
 
-# import the necessary packages
+# Import the necessary packages
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
-from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import resnet18, ResNet18_Weights, resnet50, ResNet50_Weights
 from torch.optim import Adam
 from torch import nn
 import matplotlib.pyplot as plt
@@ -19,37 +19,45 @@ from tqdm import tqdm
 from collections import OrderedDict
 from sklearn.metrics import balanced_accuracy_score
 import numpy as np
+import argparse
 
 train_datasets_dir = "../archive/train+val"
 datasets_to_train = []
 
+parser = argparse.ArgumentParser(
+    description="Train multiple models (RN18 or RN50) on multiple datasets from a folder"
+)
+
+parser.add_argument("--RN50",
+                    help="Train an RN50 model instead of an RN18", action="store_true")
+
+args = parser.parse_args()
+
 
 def train_model(dataset_name):
-    # define training hyperparameters
+    # Define training hyperparameters
     INIT_LR = 1e-3
     BATCH_SIZE = 64
     EPOCHS = 20
     early_stopping_th = 3
-    # define the train and val splits
+    # Define the train and val splits
     TRAIN_SPLIT = 0.8
     VAL_SPLIT = 1 - TRAIN_SPLIT
 
     # Define the train and test directories
     train_dir = f"../archive/train+val/{dataset_name}/train+val"
 
-    # Define saving paths
+    # Define saving path
     output_path = "outputs"
-    model_name = f"{dataset_name}_{EPOCHS}epochs_{early_stopping_th}early_{BATCH_SIZE}batch_{INIT_LR}lr_{TRAIN_SPLIT}train"
-    model_save = f"{output_path}/{model_name}_model.pt"
-    plot_save = f"{output_path}/{model_name}_plot.png"
 
     # Fail guard to prevent program from crashing after training
     if not os.path.exists(output_path):
         raise Exception(f"Output folder doesn't exist")
 
-    # set the device we will be using to train the model
+    # Set the device that will be used to train the model (GPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # Standard data transform that was also used to train on ImageNet for pre-trained weights
     data_transform = transforms.Compose([transforms.ToTensor(),
                                          transforms.Normalize(
                                              mean=[0.485, 0.456, 0.406],
@@ -69,33 +77,45 @@ def train_model(dataset_name):
     (trainData, valData) = random_split(trainData, [numTrainSamples, numValSamples],
                                         generator=torch.Generator().manual_seed(42))
 
-    # initialize the train, validation, and test data loaders
+    # Initialize the train & validation dataloaders
     trainDataLoader = DataLoader(trainData, shuffle=True, batch_size=BATCH_SIZE)
     valDataLoader = DataLoader(valData, batch_size=BATCH_SIZE)
 
-    # calculate steps per epoch for training and validation set
+    # Calculate steps per epoch for training and validation set
     trainSteps = len(trainDataLoader.dataset) // BATCH_SIZE
     valSteps = len(valDataLoader.dataset) // BATCH_SIZE
 
-    # initialize the resnet model
-    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    # Depending on args given, either init ResNet-18 or ResNet-50 model (and change model name & saving accordingly)
+    if args.RN50:
+        # Initialize the resnet-50 model
+        model = resnet50(weights=ResNet50_Weights.DEFAULT)
+        model_name = f"RN50_{dataset_name}_{EPOCHS}epochs_{early_stopping_th}early_{BATCH_SIZE}batch_{INIT_LR}lr_{TRAIN_SPLIT}train"
+        model_save = f"{output_path}/{model_name}_model.pt"
+        plot_save = f"{output_path}/{model_name}_plot.png"
+    else:
+        # Initialize the resnet-18 model
+        model = resnet18(weights=ResNet18_Weights.DEFAULT)
+        model_name = f"{dataset_name}_{EPOCHS}epochs_{early_stopping_th}early_{BATCH_SIZE}batch_{INIT_LR}lr_{TRAIN_SPLIT}train"
+        model_save = f"{output_path}/{model_name}_model.pt"
+        plot_save = f"{output_path}/{model_name}_plot.png"
 
-    # freeze all model parameters
+    # Freeze all model parameters and add new fully connected last layer (transfer learning)
     for param in model.parameters():
         param.requires_grad = False
     num_ftrs = model.fc.in_features
     classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(num_ftrs, 7))]))
     model.fc = classifier
 
-    # Send the model to the gpu
+    # Send the model to the GPU (or other device)
     model.to(device)
 
-    # initialize our optimizer and loss function
+    # Initialize the optimizer and loss function
     opt = Adam(model.parameters(), lr=INIT_LR)
+    # Class weights to compensate for the unbalanced dataset
     weights = torch.Tensor([0.382, 0.243, 0.117, 1.21, 0.125, 0.166, 1]).to(device)
     lossFn = nn.NLLLoss(weights)
     softMax = nn.LogSoftmax(dim=1)
-    # initialize a dictionary to store training history
+    # Initialize a dictionary to store training history
     H = {
         "train_loss": [],
         "train_acc": [],
@@ -105,35 +125,33 @@ def train_model(dataset_name):
     # Keep track of the best loss for early stopping
     highest_balanced_accuracy = 0
     epochs_without_improvement = 0
-    # measure how long training is going to take
+    # Measure how long training is going to take
     print("[INFO] Training the network...")
     startTime = time.time()
 
-    # loop over our epochs
+    # Loop over all epochs
     for e in range(0, EPOCHS):
-        # set the model in training mode
+        # Set the model in training mode
         model.train()
-        # initialize the total training and validation loss
+        # Initialize the total training and validation loss
         totalTrainLoss = 0
         totalValLoss = 0
-        # initialize the number of correct predictions in the training
-        # and validation step
+        # Initialize the number of correct predictions in the training and validation step
         trainCorrect = 0
         valCorrect = 0
-        # loop over the training set
+        # Loop over the training set
         for (x, y) in tqdm(trainDataLoader):
-            # send the input to the device
+            # Send the input to the device
             (x, y) = (x.to(device), y.to(device))
-            # perform a forward pass and calculate the training loss
+            # Perform a forward pass and calculate the training loss (using softmax as input)
             pred = model(x)
             loss = lossFn(softMax(pred), y)
-            # zero out the gradients, perform the backpropagation step,
-            # and update the weights
+            # Xero out the gradients, perform the backpropagation step, and update the weights
             opt.zero_grad()
             loss.backward()
             opt.step()
-            # add the loss to the total training loss so far and
-            # calculate the number of correct predictions
+            # Add the loss to the total training loss so far and
+            # Calculate the number of correct predictions
             totalTrainLoss += loss
             trainCorrect += (pred.argmax(1) == y).type(torch.float).sum().item()
 
@@ -141,18 +159,18 @@ def train_model(dataset_name):
         valPreds = []
         valTruths = []
 
-        # switch off autograd for evaluation
+        # Switch off autograd for evaluation
         with torch.no_grad():
-            # set the model in evaluation mode
+            # Set the model in evaluation mode
             model.eval()
-            # loop over the validation set
+            # Loop over the validation set
             for (x, y) in valDataLoader:
-                # send the input to the device
+                # Send the input to the device
                 (x, y) = (x.to(device), y.to(device))
-                # make the predictions and calculate the validation loss
+                # Make the predictions and calculate the validation loss (using softmax)
                 pred = model(x)
                 totalValLoss += lossFn(softMax(pred), y)
-                # calculate the number of correct predictions
+                # Calculate the number of correct predictions
                 valCorrect += (pred.argmax(1) == y).type(
                     torch.float).sum().item()
 
@@ -160,18 +178,18 @@ def train_model(dataset_name):
                 valPreds.extend(pred.argmax(axis=1).cpu().numpy())
                 valTruths.extend(y.cpu().numpy())
 
-        # calculate the average training and validation loss
+        # Calculate the average training and validation loss
         avgTrainLoss = totalTrainLoss / trainSteps
         avgValLoss = totalValLoss / valSteps
-        # calculate the training and validation accuracy
+        # Calculate the training and validation accuracy
         trainCorrect = trainCorrect / len(trainDataLoader.dataset)
         valCorrect = valCorrect / len(valDataLoader.dataset)
-        # update our training history
+        # Update the training history
         H["train_loss"].append(avgTrainLoss.cpu().detach().numpy())
         H["train_acc"].append(trainCorrect)
         H["val_loss"].append(avgValLoss.cpu().detach().numpy())
         H["val_acc"].append(valCorrect)
-        # print the model training and validation information
+        # Print the model training and validation information
         print("[INFO] EPOCH: {}/{}".format(e + 1, EPOCHS))
         print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(
             avgTrainLoss, trainCorrect))
@@ -192,12 +210,12 @@ def train_model(dataset_name):
             best_model = model
             print(f"New highest validation balanced accuracy: {highest_balanced_accuracy}")
 
-    # finish measuring how long training took
+    # Finish measuring how long training took
     endTime = time.time()
     print("[INFO] total time taken to train the model: {:.2f}s".format(
         endTime - startTime))
 
-    # plot the training loss and accuracy
+    # Plot the training loss and accuracy
     plt.style.use("ggplot")
     plt.figure()
     plt.plot(H["train_loss"], label="train_loss")
@@ -210,7 +228,7 @@ def train_model(dataset_name):
     plt.legend(loc="lower left")
     plt.savefig(plot_save)
 
-    # serialize the model to disk
+    # Serialize the model to disk
     torch.save(best_model, model_save)
 
 

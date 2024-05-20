@@ -17,7 +17,7 @@ def add_corruptions_to_dataset(src_dat: str, src_cor_dat: str, des_dat: str, cor
     of corrupted data in it.
 
     :param src_dat: string path where the source train dataset is located
-    :param src_cor: string path where the corrupted train dataset is located
+    :param src_cor_dat: string path where the corrupted train dataset is located
     :param des_dat: string path where to save the combined new dataset
     :param cor_ratio: percentage (0 - 1) of corruptions in combined new dataset
     :param sev: severity of corruptions to include
@@ -48,7 +48,7 @@ def add_corruptions_to_dataset(src_dat: str, src_cor_dat: str, des_dat: str, cor
             random.shuffle(files)
 
             corruption_amount_per_folder = int(round((1 / len(corruptions)) *
-                                               (corruption_ratio / (1 - corruption_ratio)) * len(files)))
+                                               (cor_ratio / (1 - cor_ratio)) * len(files)))
 
             for i, file_name in enumerate(files):
                 if i < corruption_amount_per_folder:

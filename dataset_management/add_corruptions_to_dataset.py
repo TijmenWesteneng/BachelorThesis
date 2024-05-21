@@ -23,11 +23,15 @@ def add_corruptions_to_dataset(src_dat: str, src_cor_dat: str, des_dat: str, cor
     :param sev: severity of corruptions to include
     :return: None
     """
+    print(f"Adding corruptions from {src_cor_dat} to {src_dat}")
+    print(f"Destination folder: {des_dat}")
+    print(f"Severity: {sev}; corruption-ratio: {cor_ratio}")
 
     # Check if destination directories exist, otherwise create them
     if not os.path.exists(des_dat):
         os.makedirs(des_dat)
 
+    print(f"Copying {src_dat} to {des_dat}")
     # First copy the whole non-corrupted dataset into the new folder
     for folder in os.listdir(src_dat):
         src_dat_fol = os.path.join(src_dat, folder)
@@ -37,6 +41,7 @@ def add_corruptions_to_dataset(src_dat: str, src_cor_dat: str, des_dat: str, cor
         for file in tqdm(os.listdir(src_dat_fol)):
             copyfile(os.path.join(src_dat_fol, file), os.path.join(des_dat_fol, file))
 
+    print(f"Adding corruptions from {src_cor_dat} to {des_dat}")
     src_cor_dat_sev = os.path.join(src_cor_dat, str(sev))
     corruptions = os.listdir(src_cor_dat_sev)
     for corruption in tqdm(corruptions):

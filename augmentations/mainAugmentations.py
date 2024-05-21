@@ -35,7 +35,7 @@ def augment_folder(src, des):
             img_save.save(img_rot_file_name + "_mirror" + ".jpg")
 
 
-def augment_folders(src, des, exclude):
+def augment_folders(src, des, excl):
     if not os.path.exists(des):
         os.makedirs(des)
     for folder in tqdm(os.listdir(src)):
@@ -44,10 +44,12 @@ def augment_folders(src, des, exclude):
         if not os.path.exists(des_fol_dir):
             os.mkdir(des_fol_dir)
 
-        if folder in exclude:
+        if folder in excl:
+            print(f"Exclude (just copying): {src_fol_dir} to {des_fol_dir}")
             for file in tqdm(os.listdir(src_fol_dir)):
                 copyfile(os.path.join(src_fol_dir, file), os.path.join(des_fol_dir, file))
         else:
+            print(f"Augmenting {src_fol_dir} to {des_fol_dir}")
             augment_folder(src_fol_dir, des_fol_dir)
 
 

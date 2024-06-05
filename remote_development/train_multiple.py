@@ -37,7 +37,7 @@ args = parser.parse_args()
 def train_model(dataset_name):
     # Define training hyperparameters
     INIT_LR = 1e-3
-    BATCH_SIZE = 64
+    BATCH_SIZE = 32
     EPOCHS = 20
     early_stopping_th = 3
     # Define the train and val splits

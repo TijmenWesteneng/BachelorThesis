@@ -18,10 +18,18 @@ parser.add_argument("--corruptions_path", default=corruptions_path, type=str,
 parser.add_argument("--clean_path", default=clean_path, type=str,
                     help="Folder where the clean test set is located")
 
+parser.add_argument("--models_dir", default=models_dir, type=str,
+                    help="Folder where the (pretty) models are located")
+
+parser.add_argument("--csv_dir", default=csv_dir, type=str,
+                    help="Folder where the csv files will be saved")
+
 args = parser.parse_args()
 
 corruptions_path = args.corruptions_path
 clean_path = args.clean_path
+models_dir = args.models_dir
+csv_dir = args.csv_dir
 
 for file_name in os.listdir(models_dir):
     model_path = os.path.join(models_dir, file_name)

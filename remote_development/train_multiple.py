@@ -23,6 +23,7 @@ import argparse
 
 train_datasets_dir = "../archive/train+val"
 dataset_to_train = ""
+output_path = "outputs"
 
 parser = argparse.ArgumentParser(
     description="Train multiple models (RN18 or RN50) on multiple datasets from a folder"
@@ -37,10 +38,14 @@ parser.add_argument("--datasets_folder", default=train_datasets_dir, type=str,
 parser.add_argument("--dataset", default=dataset_to_train, type=str,
                     help="Specific dataset to train on (leave empty if training on all datasets from folder)")
 
+parser.add_argument("--output_path", default=output_path, type=str,
+                    help="Path where to save the trained models as .pt files")
+
 args = parser.parse_args()
 
 train_datasets_dir = args.datasets_folder
 dataset_to_train = args.dataset
+output_path = args.output_path
 
 
 def train_model(dataset_name):
@@ -56,12 +61,9 @@ def train_model(dataset_name):
     # Define the train and test directories
     train_dir = os.path.join(train_datasets_dir, dataset_name, "train+val")
 
-    # Define saving path
-    output_path = "outputs"
-
     # Fail guard to prevent program from crashing after training
     if not os.path.exists(output_path):
-        raise Exception(f"Output folder doesn't exist")
+        os.makedirs(output_path)
 
     # Set the device that will be used to train the model (GPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -22,7 +22,7 @@ import numpy as np
 import argparse
 
 train_datasets_dir = "../archive/train+val"
-datasets_to_train = []
+dataset_to_train = ""
 
 parser = argparse.ArgumentParser(
     description="Train multiple models (RN18 or RN50) on multiple datasets from a folder"
@@ -31,7 +31,16 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--RN50",
                     help="Train an RN50 model instead of an RN18", action="store_true")
 
+parser.add_argument("--datasets_folder", default=train_datasets_dir, type=str,
+                    help="Folder where the train datasets are")
+
+parser.add_argument("--dataset", default=dataset_to_train, type=str,
+                    help="Specific dataset to train on (leave empty if training on all datasets from folder)")
+
 args = parser.parse_args()
+
+train_datasets_dir = args.datasets_folder
+dataset_to_train = args.dataset
 
 
 def train_model(dataset_name):
@@ -45,7 +54,7 @@ def train_model(dataset_name):
     VAL_SPLIT = 1 - TRAIN_SPLIT
 
     # Define the train and test directories
-    train_dir = f"../archive/train+val/{dataset_name}/train+val"
+    train_dir = os.path.join(train_datasets_dir, dataset_name, "train+val")
 
     # Define saving path
     output_path = "outputs"
@@ -236,10 +245,10 @@ def train_model(dataset_name):
 for dir in os.listdir(train_datasets_dir):
     # Check if the directory is actually a dataset directory (useful to exclude datasets by putting them in a folder)
     if dir.find("HAM10000") != -1:
-        # If datasets_to_train is empty: train on all datasets in the folder
-        if len(datasets_to_train) == 0:
+        # If dataset_to_train is empty: train on all datasets in the folder
+        if len(dataset_to_train) == 0:
             train_model(dir)
         else:
-            # Else: check if dataset is in datasets_to_train, otherwise don't train on it
-            if dir in datasets_to_train:
+            # Else: check if dataset is in dataset_to_train, otherwise don't train on it
+            if dir == dataset_to_train:
                 train_model(dir)

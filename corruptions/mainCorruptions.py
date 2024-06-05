@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import skimage as sk
 import random
+import string
 
 
 def all_corrupt_image(image_path, severity):
@@ -34,7 +35,10 @@ def all_corrupt_image(image_path, severity):
         fig.add_subplot(rows, columns, i + 1)
         plt.imshow(imgs[i][1])
         plt.axis('off')
-        plt.title(imgs[i][0])
+        if imgs[i][0] == "brightness":
+            plt.title("Brightness Up")
+        else:
+            plt.title(string.capwords(imgs[i][0].replace("_", " ")))
 
     plt.show()
 
@@ -106,4 +110,4 @@ def characters(image_array, severity):
 
     return result_array
 
-all_corrupt_image("../HAM10000_ordered/akiec/ISIC_0024329.jpg", 5)
+all_corrupt_image("../archive/HAM10000_ordered_224_0.8_0.2/train+val/akiec/ISIC_0024329_224.jpg", 3)

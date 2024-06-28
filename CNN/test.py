@@ -1,12 +1,14 @@
 import numpy as np
 import torch
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, ConfusionMatrixDisplay, balanced_accuracy_score
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
-model_path = "outputs/softMax_10epochs_0.8_Model.pt"
-test_dir = "../archive_trash/HAM10000_augmented_all224_0.8_0.2/test"
+model_path = "../remote_development/outputs/20_epochs_3_earlystopping_32_batch/HAM10000_ordered_224_0.8_0.2_corrupted_s5_cr0.5_augmented_clahe_20epochs_3early_32batch_0.001lr_0.8train_model.pt"
+title = "Clean test set confusion matrix of a model \n trained on a corrupted dataset (s = 5, cr = 0.5, CLAHE)"
+test_dir = "../archive/HAM10000_ordered_224_0.8_0.2_clahe/test"
 BATCH_SIZE = 64
 
 data_transform = transforms.Compose([transforms.ToTensor(),
@@ -36,3 +38,8 @@ with torch.no_grad():
         preds.extend(pred.argmax(axis=1).cpu().numpy())
 
     print(classification_report(np.array(testData.targets), np.array(preds), target_names=testData.classes))
+    disp = ConfusionMatrixDisplay.from_predictions(
+        np.array(testData.targets), np.array(preds), display_labels=testData.classes, normalize='true', values_format='.2f'
+    )
+    disp.ax_.set_title(title)
+    plt.show()

@@ -4,9 +4,11 @@ import cv2
 file_dirs = ["../archive/HAM10000_ordered_224_0.8_0.2/train+val/akiec/ISIC_0024329_224.jpg",
              "../archive/HAM10000_ordered_224_0.8_0.2/train+val/bcc/ISIC_0024331_224.jpg",
              "../archive/HAM10000_ordered_224_0.8_0.2/train+val/bkl/ISIC_0024312_224.jpg",
-             "../archive/HAM10000_ordered_224_0.8_0.2/train+val/mel/ISIC_0024310_224.jpg"]
+             "../archive/HAM10000_ordered_224_0.8_0.2/train+val/mel/ISIC_0024310_224.jpg",
+             "../archive/HAM10000_ordered_224_0.8_0.2/train+val/df/ISIC_0024330_224.jpg",
+             "../archive/HAM10000_ordered_224_0.8_0.2/train+val/nv/ISIC_0024306_224.jpg"]
 
-fig = plt.figure(0, (4, 8))
+fig = plt.figure(0, (8, len(file_dirs)))
 
 for i, file_dir in enumerate(file_dirs):
 
@@ -19,16 +21,16 @@ for i, file_dir in enumerate(file_dirs):
 
     img_bgr = cv2.cvtColor(lab_img, cv2.COLOR_LAB2BGR)
 
-    fig.add_subplot(len(file_dirs), 2, i * 2 + 1)
+    fig.add_subplot(int(len(file_dirs) / 2), 4, i * 2 + 1)
     plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     plt.axis('off')
-    if i == 0:
+    if i < 2:
         plt.title("Original Image")
 
-    fig.add_subplot(len(file_dirs), 2, i * 2 + 2)
+    fig.add_subplot(int(len(file_dirs) / 2), 4, i * 2 + 2)
     plt.imshow(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB))
     plt.axis('off')
-    if i == 0:
+    if i < 2:
         plt.title("CLAHE Image")
 
 plt.show()

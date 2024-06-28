@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import numpy as np
 
+non_clahe_dir = "../remote_development/tests/mean_20_epochs_3_earlystopping_32_batch/BCE_same_baseline"
+clahe_dir = "../remote_development/tests/mean_20_epochs_3_earlystopping_32_batch/BCE_same_baseline"
+
 
 def plot_BCE(dir_path, clahe_dir_path = None):
     base_dir = os.getcwd()
@@ -10,7 +13,7 @@ def plot_BCE(dir_path, clahe_dir_path = None):
     csv_dict = dict()
     os.chdir(dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" not in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -22,7 +25,7 @@ def plot_BCE(dir_path, clahe_dir_path = None):
     os.chdir(base_dir)
     os.chdir(clahe_dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -71,7 +74,7 @@ def plot_BCE_cr(dir_path, clahe_dir_path = None):
     csv_dict = dict()
     os.chdir(dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" not in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -83,7 +86,7 @@ def plot_BCE_cr(dir_path, clahe_dir_path = None):
     os.chdir(base_dir)
     os.chdir(clahe_dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -132,7 +135,7 @@ def plot_clean(dir_path, clahe_dir_path):
     csv_dict = dict()
     os.chdir(dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" not in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -144,7 +147,7 @@ def plot_clean(dir_path, clahe_dir_path):
     os.chdir(base_dir)
     os.chdir(clahe_dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -186,7 +189,7 @@ def plot_clean_cr(dir_path, clahe_dir_path):
     csv_dict = dict()
     os.chdir(dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" not in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -198,7 +201,7 @@ def plot_clean_cr(dir_path, clahe_dir_path):
     os.chdir(base_dir)
     os.chdir(clahe_dir_path)
     for file_name in os.listdir():
-        if ".csv" in file_name:
+        if ".csv" in file_name and "clahe" in file_name:
             s_pos = file_name.find("_s")
             cr_pos = file_name.find("_cr")
             if s_pos == -1 and cr_pos == -1:
@@ -234,11 +237,7 @@ def plot_clean_cr(dir_path, clahe_dir_path):
     os.chdir(base_dir)
 
 
-plot_BCE("../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/non-clahe/BCE",
-         "../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/clahe/BCE")
-plot_BCE_cr("../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/non-clahe/BCE",
-         "../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/clahe/BCE")
-plot_clean("../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/non-clahe/BCE",
-         "../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/clahe/BCE")
-plot_clean_cr("../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/non-clahe/BCE",
-         "../remote_development/tests/20_epochs_3_earlystopping_32_batch_2/clahe/BCE")
+plot_BCE(non_clahe_dir, clahe_dir)
+plot_BCE_cr(non_clahe_dir, clahe_dir)
+plot_clean(non_clahe_dir, clahe_dir)
+plot_clean_cr(non_clahe_dir, clahe_dir)

@@ -3,9 +3,9 @@ import os
 
 from data_processing.csv_to_meancorruption import calc_cor_err
 
-test_csv_dir = "tests"
-base_csv_path = "tests/RN50_HAM10000_ordered_224_0.8_0.2_augmented_10epochs_64batch_0.001lr_0.9train_test.csv"
-des_dir = "tests/BCE"
+test_csv_dir = "tests/20_epochs_3_earlystopping_32_batch_6"
+base_csv_path = "tests/20_epochs_3_earlystopping_32_batch/RN50_HAM10000_ordered_224_0.8_0.2_augmented_20epochs_3early_32batch_0.001lr_0.8train_test.csv"
+des_dir = "tests/20_epochs_3_earlystopping_32_batch_6/BCE_same_baseline"
 
 for csv_file in os.listdir(test_csv_dir):
     test_csv_path = os.path.join(test_csv_dir, csv_file)

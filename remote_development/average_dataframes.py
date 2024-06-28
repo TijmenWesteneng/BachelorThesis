@@ -2,19 +2,36 @@ import os
 import pandas as pd
 
 
+"""
 dirs = [
-    "tests/20_epochs_3_earlystopping_64_batch_2/non-clahe (trash - wrong test set)/BCE",
-    "tests/20_epochs_3_earlystopping/BCE",
+    "tests/20_epochs_3_earlystopping_32_batch/BCE_same_baseline",
+    "tests/20_epochs_3_earlystopping_32_batch_3/BCE_same_baseline",
+    "tests/20_epochs_3_earlystopping_32_batch_4/BCE_same_baseline",
+    "tests/20_epochs_3_earlystopping_32_batch_5/BCE_same_baseline",
+    "tests/20_epochs_3_earlystopping_32_batch_6/BCE_same_baseline"
+        ]
+
+save_dir = "tests/mean_20_epochs_3_earlystopping_32_batch/BCE_same_baseline"
+"""
+
+dirs = [
+    "tests/20_epochs_3_earlystopping_32_batch",
+    "tests/20_epochs_3_earlystopping_32_batch_3",
+    "tests/20_epochs_3_earlystopping_32_batch_4",
+    "tests/20_epochs_3_earlystopping_32_batch_5",
+    "tests/20_epochs_3_earlystopping_32_batch_6"
         ]
 
 save_dir = "tests/mean_20_epochs_3_earlystopping_32_batch"
-
 
 def list_and_average(directories, csv_save_dir):
     csv_list = os.listdir(directories[0])
 
     for csv_file in csv_list:
         dataframes = []
+        if not os.path.isfile(os.path.join(directories[0], csv_file)):
+            print(f"Skipping {csv_file}: it's not a file")
+            continue
 
         for dir in directories:
             if not os.path.isdir(dir):
